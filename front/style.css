@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	*{
+		@apply text-primary;
+	}
+	.btn {
+		@apply bg-primary px-5 py-2 rounded-full text-white;
+	}
+	.gradient-france {
+		background: linear-gradient(90deg, #0055a4 0%, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%, #ef4135 100%);
+	}
+}
+
+.startBtn {
+	position: relative;
+	height: 45px;
+	width: 160px;
+}
+.startBtn svg {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	opacity: 0;
+}
+.startBtn #franceMap {
+	top: 50%;
+	left: 47%;
+	height: 60%;
+}
+
+.startBtn #franceMap .stroke {
+	fill: none;
+	stroke-width: 30%;
+	stroke-linejoin: round;
+	stroke-dasharray: 1000%;
+}
+
+.startBtn #franceMap #strokeW {
+	stroke: #ffffff;
+}
+.startBtn #franceMap #strokeR {
+	stroke: #ef4135;
+}
+.startBtn #franceMap #strokeB {
+	stroke: #0055a4;
+}
+
+.startBtn .icons {
+	top: 50%;
+	left: 50%;
+	height: 60%;
+}
+
+#resultText {
+	opacity: 0;
+}
