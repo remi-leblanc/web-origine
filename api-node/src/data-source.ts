@@ -4,16 +4,17 @@ import { Address } from "./entity/Address"
 import { Company } from "./entity/Company"
 import { Person } from "./entity/Person"
 import { Token } from "./entity/Token"
+import 'dotenv/config'
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: "remileblanc.fr",
+    host: "localhost",
     port: 3306,
-    username: "cxtr8005_remi",
-    password: "[eGX,{CZNxdA",
-    database: "cxtr8005_web-origine",
-    synchronize: true,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DBNAME,
     entities: [__dirname + '/entity/*.ts'],
+	synchronize: true,
 })
 
 AppDataSource.initialize()

@@ -1,6 +1,6 @@
-import { AppDataSource } from "../data-source"
-import * as puppeteer from 'puppeteer'
-import axios from 'axios'
+import { AppDataSource } from "../data-source";
+import * as puppeteer from 'puppeteer';
+import axios from 'axios';
 
 import { Company } from "../entity/Company"
 import { Address } from "../entity/Address"
@@ -27,6 +27,7 @@ export const companyCheck = async (req, res) => {
 
 	var response = {}
 
+	//We check if there is an url parameter in the request body
 	const tabUrl = req.body.url
 	if (!tabUrl) {
 		response = {
@@ -38,6 +39,7 @@ export const companyCheck = async (req, res) => {
 
 	websiteHost = (new URL(tabUrl)).hostname;
 
+	//We check if we already have a company with this website
 	let existingCompany = await companyRepo.findOne({
 		where: {
 			website: websiteHost
@@ -50,13 +52,17 @@ export const companyCheck = async (req, res) => {
 	if (existingCompany) {
 		response = {
 			code: 200,
-			data: formatResponseData(existingCompany)
+			data: formatResponseData(existingCompany),
+			url: websiteHost
 		}
 		return res.json(response)
 	}
 
+	//No existing company, so we'll start to browse the website
+
 	baseUrl = "https://" + websiteHost + "/"
 
+	//Open browser and wait the footer to load
 	const browser = await puppeteer.launch()
 	const page = await browser.newPage()
 	await page.goto(baseUrl)
@@ -66,41 +72,54 @@ export const companyCheck = async (req, res) => {
 
 	}
 
+	//Try to find the SIREN on the homepage, usually in the footer
 	let siren = await findSirenInPage(page)
 	if (!siren) {
+		//No SIREN on the homepage/footer, trying to find legal pages links
 		try {
 			await goToLegalPage(page)
 		} catch {
 			response = {
 				code: 404,
-				message: 'Impossible to find a legal page'
+				message: 'Impossible to find a legal page',
+				url: websiteHost
 			}
+			await browser.close();
 			return res.json(response)
 		}
 
+		//Try to find a SIREN in the legal page
 		siren = await findSirenInPage(page)
 		if (!siren) {
 			response = {
 				code: 404,
-				message: 'SIREN not found'
+				message: 'SIREN not found',
+				url: websiteHost
 			}
+			await browser.close();
 			return res.json(response)
 		}
 	}
 
+	//We found a SIREN! So we call the Insee API to get the company's infos
 	const inseeResult = await callInseeApi(siren)
 	if (!inseeResult) {
 		response = {
 			code: 500,
-			message: 'Error while fetching Insee API'
+			message: 'Error while fetching Insee API',
+			url: websiteHost
 		}
+		await browser.close();
 		return res.json(response)
 	}
+
+	//We got the infos from the API, we persist the data to the database
 
 	const createdAt = new Date()
 
 	let company = await createCompany(inseeResult, createdAt)
 	if (company == false) {
+		await browser.close();
 		throw new Error('Incomplete company data')
 	}
 	let address = await createAddress(inseeResult, createdAt)
@@ -119,6 +138,7 @@ export const companyCheck = async (req, res) => {
 		code: 200,
 		data: formatResponseData(company)
 	}
+	await browser.close();
 	return res.json(response)
 }
 
@@ -217,7 +237,7 @@ function formatResponseData(company: Company) {
 async function callInseeApi(siren: string) {
 	return await axios({
 		method: 'get',
-		url: 'https://api.insee.fr/entreprises/sirene/V3/siret',
+		url: 'https://api.insee.fr/entreprises/sirene/V3.11/siret',
 		headers: {
 			[authToken.headerKey]: authToken.headerValue,
 		},

@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/.vscode/tasks.json",
+            "args": ["Start"],
+            "cwd": "${workspaceFolder}",
+        }
+    ]
+}

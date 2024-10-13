@@ -1,13 +1,11 @@
 import axios from 'axios'
 import { AppDataSource } from "../data-source"
 import { Token } from "../entity/Token"
-import { TokenType } from "../enum/TokenType"
 
 const tokenRepo = AppDataSource.getRepository(Token)
 
 export const tokengen = async (req, res, next) => {
-	let tokenGen = await tokenRepo.findOneBy({ name: 'sirene', type: TokenType.TOKENGEN })
-	let authToken = await tokenRepo.findOneBy({ name: 'sirene', type: TokenType.AUTH })
+	let authToken = await tokenRepo.findOneBy({ name: 'sirene' })
 
 	let now = new Date()
 	var diffHours = 0
@@ -19,7 +17,7 @@ export const tokengen = async (req, res, next) => {
 			method: 'post',
 			url: 'https://api.insee.fr/token',
 			headers: {
-				[tokenGen!.headerKey]: tokenGen!.headerValue,
+				"Authorization": "Basic " + Buffer.from(process.env.INSEE_CONSUMER_KEY + ":" + process.env.INSEE_SECRET_KEY).toString('base64'),
 				'Content-Type': 'application/x-www-form-urlencoded'
 			},
 			data: {
@@ -34,7 +32,6 @@ export const tokengen = async (req, res, next) => {
 					authToken = new Token()
 					authToken.name = 'sirene'
 					authToken.headerKey = 'Authorization'
-					authToken.type = TokenType.AUTH
 				}
 
 				authToken.headerValue = response.data.token_type + ' ' + response.data.access_token

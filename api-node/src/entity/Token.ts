@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
-import { TokenType } from "../enum/TokenType"
 
 @Entity()
 export class Token {
@@ -16,10 +15,7 @@ export class Token {
 	@Column("varchar", { length: 255 })
 	headerValue: string
 
-	@Column({type: "enum", enum: TokenType, default: TokenType.AUTH})
-	type: TokenType
-
-    @Column("datetime", {nullable: true})
+    @Column("datetime")
     expiresAt: Date
 
 	@Column("datetime")
